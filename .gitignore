@@ -204,3 +204,6 @@ cython_debug/
 *.code-workspace
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,audio,python
+
+dataset/train_list.txt
+dataset/validation_list.txt

@@ -2,7 +2,7 @@ import os
 import numpy as np
 from os import path as osp
 
-root_dir = '/content/drive/MyDrive/speech_classification/dataset'
+root_dir = osp.abspath('./dataset')
 train_file_path = osp.join(root_dir, "train_list.txt")
 validation_file_path = osp.join(root_dir, "validation_list.txt")
 if osp.isfile(train_file_path):
