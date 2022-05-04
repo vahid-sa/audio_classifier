@@ -2,7 +2,9 @@ import os
 import torch
 import torchaudio
 import dataset
+import model
 from os import path as osp
+from torchsummary import summary
 
 
 if __name__ == "__main__":
@@ -10,7 +12,8 @@ if __name__ == "__main__":
     ANNOTS_FILE_PATH = osp.join(AUDIO_DIR, "train_list.txt")
     SAMPLE_RATE = 16000
     NUM_SAMPLES = 22050
-    device = "cuda" if torch.cuda.is_available() else "cput"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # device = "cpu"
     print(f"device is {device}")
     mel_spectogram = torchaudio.transforms.MelSpectrogram(
         sample_rate=SAMPLE_RATE,
@@ -26,7 +29,9 @@ if __name__ == "__main__":
         num_samples=NUM_SAMPLES,
         device=device
     )
-    print(len(ds))
+    # print(len(ds))
     signal, sr = ds[100]
-    print(signal.size())
-    print(signal.get_device())
+    # print(signal.size())
+    # print(signal.get_device())
+    cnn = model.VGG(device=device)
+    summary(model=cnn, input_size=signal.size(), device=device)
