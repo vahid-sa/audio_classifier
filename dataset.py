@@ -22,6 +22,9 @@ class AudioDataset(Dataset):
         self.transformation = transformation.to(self.device)
         self.target_sample_rate = sample_rate
         self.num_samples = num_samples
+        self.classes = {
+            "1": 0, "3": 1, "4": 2, "5": 3, "7": 4, "8": 5, "9": 6, "11": 7, "13": 8, "15": 9, "17": 10, "19": 11,
+        }
 
     def __len__(self) -> int:
         return len(self.annotations_files)
@@ -29,7 +32,7 @@ class AudioDataset(Dataset):
     def __getitem__(self, index: int) -> tuple:
         filename = self.annotations_files[index]
         path = osp.join(self.audio_dir, filename)
-        classID = self._extract_classID(filename)
+        label, classID = self._extract_class(filename)
         signal, sr = torchaudio.load(path)
         signal = signal.to(self.device)
         signal = self._resample_if_necessary(signal, sr)
@@ -71,8 +74,8 @@ class AudioDataset(Dataset):
         annotations_files = annotations_string.splitlines()
         return annotations_files
 
-    @staticmethod
-    def _extract_classID(filename: str) -> int:
+    def _extract_class(self, filename: str) -> int:
         name: str = osp.basename(filename)
-        id = int(name.split("(")[1].split(")")[0])
-        return id
+        label = name.split("(")[1].split(")")[0]
+        id = self.classes[label]
+        return label, id

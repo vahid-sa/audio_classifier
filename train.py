@@ -26,7 +26,7 @@ def train(
     loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     training_dataloader = DataLoader(
-        training_dataset, batch_size=batch_size, shuffle=True,
+        training_dataset, batch_size=batch_size, shuffle=True, num_workers=2,
     )
     for epoch in range(num_epochs):
         for i, data in enumerate(training_dataloader):
