@@ -208,3 +208,4 @@ cython_debug/
 dataset/train_list.txt
 dataset/validation_list.txt
 *.pth
+*.pt

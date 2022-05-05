@@ -13,20 +13,22 @@ from train import train
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('--dataset_dir', '-d', type=str, required=True, dest="dataset_dir", help="path to dataset directory")
-    parser.add_argument('--state_dict_path', '-p', type=str, required=True, dest="state_dict_path", help="path to state dict for load and save")
+    parser.add_argument('--state_dict_dir', '-p', type=str, required=True, dest="state_dict_dir", help="path to state dict for load and save")
     args = parser.parse_args()
     AUDIO_DIR = osp.abspath(osp.expandvars(osp.expanduser(args.dataset_dir)))
     TRAIN_ANNOTS_FILE_PATH = osp.join(AUDIO_DIR, "train_list.txt")
     VAL_ANNOTS_FILE_PATH = osp.join(AUDIO_DIR, "validation_list.txt")
-    SAMPLE_RATE = 16000
+    SAMPLE_RATE = 8000
     NUM_SAMPLES = 22050
-    BATCH_SIZE = 1
-    LEARNING_RATE = 0.0001
-    NUM_EPOCHS = 10
-    SAVE_STATE_DICT_PATH = osp.abspath(osp.expandvars(osp.expanduser(args.state_dict_path)))
+    BATCH_SIZE = 10
+    LEARNING_RATE = 0.01
+    WEIGHT_DECAY = 0.0001
+    NUM_EPOCHS = 500
+    SAVE_STATE_DICT_PATH = osp.join(osp.abspath(osp.expandvars(osp.expanduser(args.state_dict_dir))), "{0}.pt")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     device = "cpu"
     print(f"device is {device}")
+    """
     mel_spectogram = torchaudio.transforms.MelSpectrogram(
         sample_rate=SAMPLE_RATE,
         n_fft=1024,
@@ -55,7 +57,6 @@ if __name__ == "__main__":
     # print(signal.get_device())
     cnn = model.VGG(device=device)
     summary(model=cnn, input_size=signal.size(), device=device)
-    """
     train(
         model=cnn,
         training_dataset=training_dataset,
@@ -67,3 +68,35 @@ if __name__ == "__main__":
         save_state_dict_path=SAVE_STATE_DICT_PATH,
     )
     """
+    training_dataset = dataset.AudioDataset(
+        annotations_file_path=TRAIN_ANNOTS_FILE_PATH,
+        audio_dir=AUDIO_DIR,
+        sample_rate=SAMPLE_RATE,
+        num_samples=NUM_SAMPLES,
+        device=device,
+    )
+    validation_dataset = dataset.AudioDataset(
+        annotations_file_path=VAL_ANNOTS_FILE_PATH,
+        audio_dir=AUDIO_DIR,
+        sample_rate=SAMPLE_RATE,
+        num_samples=NUM_SAMPLES,
+        device=device,
+    )
+    # for data in train_dataloader:
+    #     inputs, targets = data
+    #     print(f"inputs: {inputs.size()} | {inputs.dtype}")
+    #     print(f"targets: {targets.size()} | {targets.dtype}")
+    cnn = model.M5(device=device)
+    # signal, sr = training_dataset[1]
+    # summary(model=cnn, input_size=signal.size(), device=device)
+    train(
+        model=cnn,
+        training_dataset=training_dataset,
+        validation_dataset=validation_dataset,
+        num_epochs=NUM_EPOCHS,
+        batch_size=BATCH_SIZE,
+        learning_rate=LEARNING_RATE,
+        weight_decay=WEIGHT_DECAY,
+        device=device,
+        save_state_dict_path=SAVE_STATE_DICT_PATH,
+    )

@@ -11,7 +11,7 @@ class AudioDataset(Dataset):
         self,
         annotations_file_path: str,
         audio_dir: str,
-        transformation: object,
+        # transformation: object,
         sample_rate: int,
         num_samples: int,
         device: str,
@@ -19,7 +19,7 @@ class AudioDataset(Dataset):
         self.annotations_files = self._load_annotations_file(annotations_file_path)
         self.audio_dir = audio_dir
         self.device = device
-        self.transformation = transformation.to(self.device)
+        # self.transformation = transformation.to(self.device)
         self.target_sample_rate = sample_rate
         self.num_samples = num_samples
         self.classes = {
@@ -36,11 +36,11 @@ class AudioDataset(Dataset):
         signal, sr = torchaudio.load(path)
         signal = signal.to(self.device)
         signal = self._resample_if_necessary(signal, sr)
-        signal = self._mix_down_if_necessary(signal)
-        signal = self._cut_if_necessary(signal)
-        signal = self._right_pad_if_necessary(signal)
-        signal = self.transformation(signal)
-        return signal, classID
+        # signal = self._mix_down_if_necessary(signal)
+        # signal = self._cut_if_necessary(signal)
+        # signal = self._right_pad_if_necessary(signal)
+        # signal = self.transformation(signal)
+        return signal, torch.tensor(classID, device=self.device)
 
     def _cut_if_necessary(self, signal: torch.Tensor) -> torch.Tensor:
         if signal.shape[1] > self.num_samples:
@@ -79,7 +79,7 @@ class AudioDataset(Dataset):
         label = name.split("(")[1].split(")")[0]
         id = self.classes[label]
         return label, id
-    
+
     def label_to_index(self, label: str) -> int:
         return self.classes[label]
 
@@ -88,3 +88,29 @@ class AudioDataset(Dataset):
         indices: list = self.classes.values()
         position = indices.index(index)
         return labels[position]
+
+
+def pad_sequence(batch: torch.Tensor) -> torch.Tensor:
+    # Make all tensor in a batch the same length by padding with zeros
+    batch = [item.t() for item in batch]
+    batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.)
+    return batch.permute(0, 2, 1)
+
+
+def collate_fn(batch: torch.Tensor) -> tuple:
+
+    # A data tuple has the form:
+    # waveform, sample_rate, label, speaker_id, utterance_number
+
+    tensors, targets = [], []
+
+    # Gather in lists, and encode labels as indices
+    for signal, classID in batch:
+        tensors += [signal]
+        targets += [classID]
+
+    # Group the list of tensors into a batched tensor
+    tensors = pad_sequence(tensors)
+    targets = torch.stack(targets)
+
+    return tensors, targets
