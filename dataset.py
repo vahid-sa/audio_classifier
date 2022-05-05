@@ -79,3 +79,12 @@ class AudioDataset(Dataset):
         label = name.split("(")[1].split(")")[0]
         id = self.classes[label]
         return label, id
+    
+    def label_to_index(self, label: str) -> int:
+        return self.classes[label]
+
+    def index_to_label(self, index: int) -> str:
+        labels: list = self.classes.keys()
+        indices: list = self.classes.values()
+        position = indices.index(index)
+        return labels[position]
