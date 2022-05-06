@@ -207,5 +207,7 @@ cython_debug/
 
 dataset/train_list.txt
 dataset/validation_list.txt
+dataset/annotation_list.txt
 *.pth
 *.pt
+temp.py
